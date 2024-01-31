@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -e
+
+TDIR=$1
+MIRROR=$2
+DISKNUM=$3
+CDDIR=$4
+ARCHES=$5
+
+# Copy grub theme assets
+# Until debian-cd picks them from d-i automatically:
+# http://bugs.debian.org/1003927
+cp -r $BASEDIR/../../threat-config/common/bootloaders/grub-pc/theme \
+      $BASEDIR/../../threat-config/common/bootloaders/grub-pc/splash.png \
+      $CDDIR/boot/grub/
+
+cd $CDDIR
+
+fix_branding() {
+    sed -i -e 's|Debian GNU/Linux|Threat Linux|g' \
+	-e 's|Threat GNU/Linux|Threat Linux|g' \
+	-e 's|Debian threat-rolling|Threat Rolling|g' \
+	-e 's|Debian|Threat|g' \
+	-e 's|DEBIAN|THREAT|g' \
+	"$@"
+}
+
+# Rebrand Debian into Threat
+if [ -e ../boot$DISKNUM/isolinux/menu.cfg ]; then
+    fix_branding ../boot$DISKNUM/isolinux/menu.cfg \
+		 ../boot$DISKNUM/isolinux/*.txt
+fi
+if [ -d boot/grub/theme ] && [ -s boot/grub/theme ]; then
+    fix_branding boot/grub/theme/*
+fi
+
+# Remove Debian's windows loader
+rm -f autorun.inf win32-loader.ini setup.exe
+
+# Replace Debian specific documentation
+rm -rf css
+cat >README.txt <<EOF
+This disc contains an installer for Threat Linux.
+
+Read more at: https://www.threatcode.github.io
+EOF
+cat >README.html <<EOF
+<html>
+<head><title>Threat Linux Installer Disc</title></head>
+<body>
+This disc contains an installer for Threat Linux.
+
+Read more at: <a href="https://www.threatcode.github.io">www.threatcode.github.io</a>
+</body>
+</html>
+EOF
+
+# Replace threat-last-snapshot with threat-rolling
+if [ -e dists/threat-last-snapshot ]; then
+    mv dists/threat-last-snapshot dists/threat-rolling
+    rm -f dists/stable && ln -sf threat-rolling dists/stable
+    sed -i -e 's|threat-last-snapshot|threat-rolling|g' \
+	dists/threat-rolling/Release
+fi
+
+# Redo the md5sum.txt due to our changes
+find . -type f | grep -v ./md5sum.txt | xargs md5sum | sort -uk2 > md5sum.txt

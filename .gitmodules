@@ -1,0 +1,15 @@
+[submodule "threat-arm"]
+	path = threat-arm
+	url = https://github.com/threatcode/threat-arm
+[submodule "threat-cloud"]
+	path = threat-cloud
+	url = https://github.com/threatcode/threat-cloud
+[submodule "threat-docker"]
+	path = threat-docker
+	url = https://github.com/threatcode/threat-docker
+[submodule "threat-vm"]
+	path = threat-vm
+	url = https://github.com/threatcode/threat-vm
+[submodule "threat-wsl-rootfs"]
+	path = threat-wsl-rootfs
+	url = https://github.com/threatcode/threat-wsl-rootfs
